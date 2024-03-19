@@ -1,13 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"github.com/jenujari/go-srv-bootstrap/config"
+	"github.com/jenujari/go-srv-bootstrap/helpers"
+	"github.com/jenujari/go-srv-bootstrap/server"
 )
 
+var cmder *helpers.Commander
+
 func init() {
-	fmt.Println("this is init func")
+	cmder = helpers.NewCommander()
 }
 
 func main() {
-	fmt.Println("this is main func")
+	cmder.WG.Add(1)
+	srv := server.GetServer()
+
+	go server.RunServer(cmder)
+	config.Log.Println("Server is running at ", srv.Addr)
+
+
+	cmder.WaitForFinish()
 }
