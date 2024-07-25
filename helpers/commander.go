@@ -11,7 +11,7 @@ import (
 )
 
 type Commander struct {
-	interuppted bool
+	interrupted bool
 
 	done           chan bool
 	interrupt      chan os.Signal
@@ -30,46 +30,54 @@ func NewCommander() *Commander {
 	cmd.done = make(chan bool)
 	cmd.FatalErrorChan = make(chan error)
 	cmd.interrupt = make(chan os.Signal)
-	cmd.interuppted = false
+	cmd.interrupted = false
 
 	return cmd
 }
 
-func (cmder *Commander) WaitForFinish() {
-	go handleInterrupt(cmder)
-	go waitGroupDone(cmder)
-	go watchError(cmder)
-	gracefullExit(cmder)
+func (cmder *Commander) AddWorker(n int) {
+	cmder.WG.Add(n)
 }
 
-func handleInterrupt(cmder *Commander) {
-	// system inturrpt signal or terminate signal will be passed on interrupt channel 
+func (cmder *Commander) CompleteOneWorker() {
+	cmder.WG.Done()
+}
+
+func (cmder *Commander) WaitForFinish() {
+	go cmder.handleInterrupt()
+	go cmder.waitGroupDone()
+	go cmder.watchError()
+	cmder.gracefullyExit()
+}
+
+func (cmder *Commander) handleInterrupt() {
+	// system inturrpt signal or terminate signal will be passed on interrupt channel
 	signal.Notify(cmder.interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	for range cmder.interrupt {
-		if cmder.interuppted {
-			config.Log.Println("\nInterrupt signal already captured working on closing the process.")
+		if cmder.interrupted {
+			config.GetLogger().Println("\nInterrupt signal already captured working on closing the process.")
 			continue
 		}
-		cmder.interuppted = true
+		cmder.interrupted = true
 		cmder.cancel()
-		config.Log.Println("Interuppt signal captured.")
+		config.GetLogger().Println("Interuppt signal captured.")
 	}
 }
 
-func watchError(cmder *Commander) {
+func (cmder *Commander) watchError() {
 	err := <-cmder.FatalErrorChan
-	config.Log.Println("Fatal error captured :: ", err)
+	config.GetLogger().Println("Fatal error captured :: ", err)
 	cmder.cancel()
 }
 
-func waitGroupDone(cmder *Commander) {
+func (cmder *Commander) waitGroupDone() {
 	cmder.WG.Wait()
 	cmder.done <- true
 }
 
-func gracefullExit(cmder *Commander) {
+func (cmder *Commander) gracefullyExit() {
 	<-cmder.done
-	config.Log.Println("Gracefull exit")
+	config.GetLogger().Println("Gracefully exit")
 	os.Exit(0)
 }

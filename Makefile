@@ -8,7 +8,7 @@ dev:
 	air
 
 run:build
-	.\scrapper.exe
+	.\server.exe
 
 hello:
 	echo "Hello Hi"
