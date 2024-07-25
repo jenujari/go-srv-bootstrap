@@ -18,18 +18,18 @@ var (
 	dbPATH  string
 	dirPATH string
 	dbc     *gorm.DB
-	Log      *log.Logger
+	logger  *log.Logger
 )
 
 func init() {
 	// init log system
-	Log = log.Default()
-	Log.SetOutput(os.Stdout)
+	logger = log.Default()
+	logger.SetOutput(os.Stdout)
 
 	// set default config folder in user default directory
 	rootPath, err := os.UserHomeDir()
 	if err != nil {
-		Log.Panic("failed to get user directory")
+		logger.Panic("failed to get user directory")
 	}
 
 	dirPATH = filepath.Join(rootPath, CONFIG_FOLDER)
@@ -39,7 +39,7 @@ func init() {
 	// setup db connection
 	dbc, err = gorm.Open(sqlite.Open(dbPATH), &gorm.Config{})
 	if err != nil {
-		Log.Panic("failed to connect database")
+		logger.Panic("failed to connect database")
 	}
 }
 
@@ -49,4 +49,8 @@ func GetDBC() *gorm.DB {
 
 func GetUserDir() string {
 	return dirPATH
+}
+
+func GetLogger() *log.Logger {
+	return logger
 }
