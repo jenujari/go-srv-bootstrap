@@ -11,5 +11,9 @@ func SetRoutes(r *chi.Mux) {
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello World 2"))
+	_, err := w.Write([]byte("Hello World 2"))
+
+	if err != nil {
+		return
+	}
 }

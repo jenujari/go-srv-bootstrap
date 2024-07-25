@@ -13,12 +13,11 @@ func init() {
 }
 
 func main() {
-	cmder.WG.Add(1)
+	cmder.AddWorker(1)
 	srv := server.GetServer()
 
 	go server.RunServer(cmder)
-	config.Log.Println("Server is running at ", srv.Addr)
-
+	config.GetLogger().Println("Server is running at ", srv.Addr)
 
 	cmder.WaitForFinish()
 }
