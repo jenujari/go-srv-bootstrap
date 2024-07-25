@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Page</title>
+
+  <link rel="stylesheet" href="static/main.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="text/javascript">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            "montserrat": ["Montserrat", "system-ui"],
+            "poppins": ["Poppins", "system-ui"],
+          },
+          colors: {
+            clifford: '#da373d',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="static/root.js" defer></script>
+</head>
+
+<body class="bg-gray">
+  <h5 class="text-3xl font-bold underline text-clifford font-poppins">Hello world</h5>
+</body>
+
+</html>
