@@ -34,7 +34,10 @@ func init() {
 
 	dirPATH = filepath.Join(rootPath, CONFIG_FOLDER)
 	dbPATH = filepath.Join(dirPATH, CONFIG_DB)
-	os.MkdirAll(dirPATH, os.ModePerm)
+	err = os.MkdirAll(dirPATH, os.ModePerm)
+	if err != nil {
+		logger.Panic("failed to create config directory", dirPATH)
+	}
 
 	// setup db connection
 	dbc, err = gorm.Open(sqlite.Open(dbPATH), &gorm.Config{})

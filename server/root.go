@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"strings"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-
-	"github.com/jenujari/go-srv-bootstrap/config"
-	"github.com/jenujari/go-srv-bootstrap/helpers"
-	"github.com/jenujari/go-srv-bootstrap/tpl"
+	"go-srv-bootstrap/config"
+	"go-srv-bootstrap/helpers"
+	"go-srv-bootstrap/tpl"
 )
 
 var (
 	server *http.Server
-	router *chi.Mux
+	router *http.ServeMux
 )
 
 func init() {
@@ -30,8 +26,7 @@ func init() {
 		MaxHeaderBytes:    0,
 	}
 
-	router = chi.NewRouter()
-	router.Use(middleware.Logger)
+	router = http.NewServeMux()
 
 	FileServer(router, "/static")
 	SetRoutes(router)
@@ -40,20 +35,20 @@ func init() {
 	config.GetLogger().Println("server initialization complete.")
 }
 
-func RunServer(cmder *helpers.Commander) {
-	defer cmder.CompleteOneWorker()
+func RunServer(ctx *helpers.ProcessContext) {
+	defer ctx.CompleteOneWorker()
 
-	go func(cmdx *helpers.Commander) {
+	go func(cmdx *helpers.ProcessContext) {
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			cmdx.FatalErrorChan <- fmt.Errorf("ListenAndServe(): %v", err)
 		}
-	}(cmder)
+	}(ctx)
 
 	// helper.HitBrowser("http://localhost:5456", j)
 
-	<-cmder.CTX.Done()
+	<-ctx.CTX.Done()
 	config.GetLogger().Println("shutting down server...")
-	if err := server.Shutdown(cmder.CTX); err != nil {
+	if err := server.Shutdown(ctx.CTX); err != nil {
 		panic(err) // failure/timeout shutting down the server gracefully
 	}
 	config.GetLogger().Println("server shutdown complete...")
@@ -66,26 +61,12 @@ func GetServer() *http.Server {
 
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
-func FileServer(r chi.Router, path string) {
-	sub, err := fs.Sub(tpl.GetAssetsFs(), "assets")
+func FileServer(r *http.ServeMux, path string) {
+	sub , err := fs.Sub(tpl.GetAssetsFs(), "assets")
 	if err != nil {
 		panic(err)
 	}
 
-	if strings.ContainsAny(path, "{}*") {
-		panic("FileServer does not permit any URL parameters.")
-	}
-
-	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
-		path += "/"
-	}
-	path += "*"
-
-	r.Get(path, func(w http.ResponseWriter, rx *http.Request) {
-		rctx := chi.RouteContext(rx.Context())
-		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*") + "/"
-		fs := http.StripPrefix(pathPrefix, http.FileServer(http.FS(sub)))
-		fs.ServeHTTP(w, rx)
-	})
+	fsx := http.FileServer(http.FS(sub))
+	r.Handle("GET "+path, http.StripPrefix(path, fsx))
 }

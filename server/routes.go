@@ -3,13 +3,11 @@ package server
 import (
 	"net/http"
 
-	"github.com/jenujari/go-srv-bootstrap/tpl"
-
-	"github.com/go-chi/chi/v5"
+	"go-srv-bootstrap/tpl"
 )
 
-func SetRoutes(r *chi.Mux) {
-	r.Get("/", Index)
+func SetRoutes(r *http.ServeMux) {
+	r.HandleFunc("/", Index)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {

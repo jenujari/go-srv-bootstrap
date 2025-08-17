@@ -4,10 +4,10 @@ import (
 	"embed"
 	"html/template"
 	"io/fs"
+	"strings"
 )
 
 //go:embed views/*.html
-//go:embed views/common/*.html
 var views embed.FS
 
 //go:embed assets/*.js
@@ -22,7 +22,7 @@ func init() {
 		panic(err)
 	}
 
-	tpl = template.Must(template.ParseFS(sub, getTemplateList()...))
+	tpl = template.Must(template.New("").Funcs(getFuncMap()).ParseFS(sub, getTemplateList()...))
 }
 
 func GetViewsFs() embed.FS {
@@ -40,6 +40,11 @@ func GetTemplateExecutor() *template.Template {
 func getTemplateList() []string {
 	return []string{
 		"index.html",
-		"common/header.html",
 	}
+}
+
+func getFuncMap() template.FuncMap {
+	var FuncMap = template.FuncMap{}
+	FuncMap["join"] = strings.Join
+	return FuncMap
 }

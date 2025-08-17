@@ -1,23 +1,24 @@
 package main
 
 import (
-	"github.com/jenujari/go-srv-bootstrap/config"
-	"github.com/jenujari/go-srv-bootstrap/helpers"
-	"github.com/jenujari/go-srv-bootstrap/server"
+	"go-srv-bootstrap/config"
+	"go-srv-bootstrap/helpers"
+	"go-srv-bootstrap/server"
 )
 
-var cmder *helpers.Commander
+var masterCtx *helpers.ProcessContext
 
 func init() {
-	cmder = helpers.NewCommander()
+	helpers.InitProcessContext()
 }
 
 func main() {
-	cmder.AddWorker(1)
+	masterCtx = helpers.GetProcessContext()
+	masterCtx.AddWorker(1)
 	srv := server.GetServer()
 
-	go server.RunServer(cmder)
+	go server.RunServer(masterCtx)
 	config.GetLogger().Println("Server is running at ", srv.Addr)
 
-	cmder.WaitForFinish()
+	masterCtx.WaitForFinish()
 }
